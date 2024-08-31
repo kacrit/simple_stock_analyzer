@@ -1,0 +1,19 @@
+{
+  "name": "stock-analysis-js",
+  "version": "1.0.0",
+  "description": "A JavaScript library for stock data analysis and moving average calculations",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "stock",
+    "analysis",
+    "moving-average",
+    "trading",
+    "javascript"
+  ],
+  "author": "Stock Analysis Team",
+  "license": "MIT"
+}
