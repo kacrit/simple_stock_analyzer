@@ -1,62 +1,51 @@
 /**
- * Stock Data Generator - Simulates stock price data
- * Generates realistic stock price data with random fluctuations
+ * Stock Data Generator
+ * Generates mock stock price data for analysis
  */
 
 class StockDataGenerator {
-    constructor(symbol, initialPrice = 100, volatility = 0.02) {
-        this.symbol = symbol;
-        this.currentPrice = initialPrice;
-        this.volatility = volatility;
-        this.history = [];
+    constructor() {
+        this.basePrice = 100;
+        this.volatility = 5;
     }
 
     /**
-     * Generate stock data for a specified number of days
+     * Generate mock stock price data
      * @param {number} days - Number of days of data to generate
-     * @returns {Array} Array of stock data objects
+     * @param {number} basePrice - Starting price
+     * @returns {Array} Array of price objects
      */
-    generateData(days = 30) {
+    generateData(days = 30, basePrice = 100) {
         const data = [];
-        let currentDate = new Date();
+        let currentPrice = basePrice;
         
-        for (let i = days; i > 0; i--) {
-            const date = new Date(currentDate);
-            date.setDate(date.getDate() - i);
+        for (let i = 0; i < days; i++) {
+            // Simulate price movement with some randomness
+            const change = (Math.random() - 0.5) * this.volatility;
+            currentPrice = Math.max(10, currentPrice + change); // Ensure price doesn't go below 10
             
-            // Simulate price movement with random walk
-            const change = (Math.random() - 0.5) * 2 * this.volatility * this.currentPrice;
-            this.currentPrice += change;
-            
-            // Ensure price doesn't go negative
-            this.currentPrice = Math.max(this.currentPrice, 0.01);
-            
-            const dailyData = {
-                date: date.toISOString().split('T')[0],
-                open: this.currentPrice + (Math.random() - 0.5) * 5,
-                high: this.currentPrice + Math.random() * 10,
-                low: Math.max(0.01, this.currentPrice - Math.random() * 8),
-                close: this.currentPrice,
+            data.push({
+                date: new Date(Date.now() - (days - i) * 24 * 60 * 60 * 1000),
+                price: parseFloat(currentPrice.toFixed(2)),
                 volume: Math.floor(Math.random() * 1000000) + 100000
-            };
-            
-            // Adjust high/low to be realistic relative to open/close
-            dailyData.high = Math.max(dailyData.high, dailyData.open, dailyData.close);
-            dailyData.low = Math.min(dailyData.low, dailyData.open, dailyData.close);
-            
-            data.push(dailyData);
+            });
         }
         
-        this.history = data;
         return data;
     }
 
     /**
-     * Get current stock data
-     * @returns {Object} Current stock data
+     * Generate data for multiple stocks
+     * @param {Array} symbols - Array of stock symbols
+     * @param {number} days - Number of days of data
+     * @returns {Object} Object with stock data by symbol
      */
-    getCurrentData() {
-        return this.history[this.history.length - 1] || null;
+    generateMultipleStocks(symbols = ['AAPL', 'GOOGL', 'MSFT'], days = 30) {
+        const stocks = {};
+        symbols.forEach(symbol => {
+            stocks[symbol] = this.generateData(days, 100 + Math.random() * 50);
+        });
+        return stocks;
     }
 }
 
