@@ -5,91 +5,87 @@
 
 class MovingAverageCalculator {
     /**
-     * Calculate simple moving average for a given period
-     * @param {Array} data - Array of stock data objects
-     * @param {number} period - Number of periods for the moving average
-     * @param {string} priceType - Type of price to use ('close', 'open', 'high', 'low')
+     * Calculate simple moving average
+     * @param {Array} prices - Array of price objects
+     * @param {number} period - Moving average period (e.g., 5, 10, 20)
      * @returns {Array} Array of moving average values
      */
-    calculateSMA(data, period = 20, priceType = 'close') {
-        if (!data || data.length < period) {
-            throw new Error(`Insufficient data. Need at least ${period} data points.`);
+    calculateSMA(prices, period) {
+        if (!Array.isArray(prices) || prices.length < period) {
+            throw new Error(`Insufficient data for ${period}-day SMA. Need at least ${period} data points.`);
         }
 
-        const smaValues = [];
+        const sma = [];
         
-        for (let i = period - 1; i < data.length; i++) {
+        for (let i = period - 1; i < prices.length; i++) {
             let sum = 0;
             for (let j = i - period + 1; j <= i; j++) {
-                sum += data[j][priceType];
+                sum += prices[j].price;
             }
             const average = sum / period;
-            smaValues.push({
-                date: data[i].date,
+            sma.push({
+                date: prices[i].date,
                 sma: parseFloat(average.toFixed(2)),
-                price: data[i][priceType]
+                price: prices[i].price,
+                period: period
             });
         }
         
-        return smaValues;
+        return sma;
     }
 
     /**
      * Calculate multiple moving averages
-     * @param {Array} data - Array of stock data objects
-     * @param {Array} periods - Array of periods for moving averages
-     * @param {string} priceType - Type of price to use
-     * @returns {Object} Object containing multiple SMA arrays
+     * @param {Array} prices - Array of price objects
+     * @param {Array} periods - Array of periods to calculate
+     * @returns {Object} Object containing SMAs for each period
      */
-    calculateMultipleSMA(data, periods = [5, 10, 20], priceType = 'close') {
-        const result = {};
+    calculateMultipleSMAs(prices, periods = [5, 10, 20]) {
+        const results = {};
         
         periods.forEach(period => {
-            try {
-                result[`sma${period}`] = this.calculateSMA(data, period, priceType);
-            } catch (error) {
-                console.warn(`Could not calculate SMA${period}: ${error.message}`);
-                result[`sma${period}`] = [];
-            }
+            results[`sma_${period}`] = this.calculateSMA(prices, period);
         });
         
-        return result;
+        return results;
     }
 
     /**
-     * Generate trading signals based on moving average crossovers
-     * @param {Array} shortSMA - Shorter period SMA data
-     * @param {Array} longSMA - Longer period SMA data
-     * @returns {Array} Array of signal objects
+     * Analyze crossover signals
+     * @param {Array} shortSMA - Shorter period SMA
+     * @param {Array} longSMA - Longer period SMA
+     * @returns {Array} Array of crossover signals
      */
-    generateSignals(shortSMA, longSMA) {
+    analyzeCrossovers(shortSMA, longSMA) {
         const signals = [];
         const minLength = Math.min(shortSMA.length, longSMA.length);
         
         for (let i = 1; i < minLength; i++) {
-            const shortPrev = shortSMA[i-1].sma;
-            const longPrev = longSMA[i-1].sma;
-            const shortCurrent = shortSMA[i].sma;
-            const longCurrent = longSMA[i].sma;
+            const prevShort = shortSMA[i-1].sma;
+            const prevLong = longSMA[i-1].sma;
+            const currShort = shortSMA[i].sma;
+            const currLong = longSMA[i].sma;
             
             let signal = 'HOLD';
             
-            // Golden cross: short MA crosses above long MA
-            if (shortPrev <= longPrev && shortCurrent > longCurrent) {
+            // Golden cross: short crosses above long
+            if (prevShort <= prevLong && currShort > currLong) {
                 signal = 'BUY';
             }
-            // Death cross: short MA crosses below long MA
-            else if (shortPrev >= longPrev && shortCurrent < longCurrent) {
+            // Death cross: short crosses below long
+            else if (prevShort >= prevLong && currShort < currLong) {
                 signal = 'SELL';
             }
             
-            signals.push({
-                date: shortSMA[i].date,
-                signal: signal,
-                shortSMA: shortCurrent,
-                longSMA: longCurrent,
-                price: shortSMA[i].price
-            });
+            if (signal !== 'HOLD') {
+                signals.push({
+                    date: shortSMA[i].date,
+                    signal: signal,
+                    shortSMA: currShort,
+                    longSMA: currLong,
+                    price: shortSMA[i].price
+                });
+            }
         }
         
         return signals;
