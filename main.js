@@ -1,39 +1,34 @@
 /**
- * Main execution file - Stock Analysis Demo
- * Demonstrates the stock analysis system
+ * Main execution file
+ * Demonstrates usage of the stock analysis system
  */
 
 const StockAnalyzer = require('./stockAnalyzer.js');
 
 function main() {
-    console.log('🚀 Stock Analysis System - JavaScript Version');
-    console.log('=============================================\n');
+    const analyzer = new StockAnalyzer();
+    
+    console.log('=== Stock Analysis System ===');
+    console.log('Generating mock data and calculating moving averages...\n');
     
     try {
-        // Analyze Apple stock
-        const appleAnalyzer = new StockAnalyzer('AAPL');
-        appleAnalyzer.initialize(150); // Generate 150 days of data
+        // Analyze single stock
+        const singleResult = analyzer.analyzeStock('AAPL', 50, [5, 10, 20]);
+        analyzer.printResults(singleResult);
         
-        const analysis = appleAnalyzer.analyze([5, 10, 20, 50]);
+        // Analyze multiple stocks
+        console.log('\n' + '='.repeat(50));
+        console.log('ANALYZING MULTIPLE STOCKS');
+        console.log('='.repeat(50));
         
-        // Display statistics
-        const stats = appleAnalyzer.getStatistics();
-        console.log('\n=== Stock Statistics ===');
-        console.log(`Symbol: ${stats.symbol}`);
-        console.log(`Current Price: $${stats.currentPrice}`);
-        console.log(`Period High: $${stats.high}`);
-        console.log(`Period Low: $${stats.low}`);
-        console.log(`Total Change: ${stats.change}%`);
+        const multiResults = analyzer.analyzeMultipleStocks(['AAPL', 'GOOGL', 'MSFT'], 40);
         
-        // Sample recent data
-        console.log('\n=== Sample Recent Data (Last 5 days) ===');
-        const recentData = analysis.stockData.slice(-5);
-        recentData.forEach(day => {
-            console.log(`${day.date}: O:$${day.open.toFixed(2)} H:$${day.high.toFixed(2)} L:$${day.low.toFixed(2)} C:$${day.close.toFixed(2)}`);
+        Object.keys(multiResults).forEach(symbol => {
+            analyzer.printResults(multiResults[symbol]);
         });
         
     } catch (error) {
-        console.error('Error in stock analysis:', error.message);
+        console.error('Error during analysis:', error.message);
     }
 }
 
@@ -42,4 +37,4 @@ if (require.main === module) {
     main();
 }
 
-module.exports = main;
+module.exports = { main };
